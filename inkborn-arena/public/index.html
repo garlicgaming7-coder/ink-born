@@ -1,0 +1,1347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Inkborn Arena</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a riso-printed sketchbook. One taped sheet to draw on, a stage to raise on, an arena to fight in; tabs flip between spreads. */
+:root{
+  --paper:#eef1f5; --dot:#d5dbe7; --card:#ffffff; --sheet:#fffffe; --ink:#1d2140; --muted:#5d6488; --line:#d0d6e3; --track:#e4e8f1;
+  --pink:#e2338a; --blue:#2c63d6; --yellow:#ffd23f; --good:#1d9a55; --bad:#d23a3a;
+  --on-pink:#ffffff; --on-yellow:#1d2140;
+  --f-display:"Bungee","Arial Black",Impact,sans-serif;
+  --f-body:"Barlow","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141729; --dot:#23284a; --card:#1c2038; --sheet:#f4f5f8; --ink:#e9ebf8; --muted:#9ba1c4; --line:#31375c; --track:#2a3050;
+    --pink:#ff5aa8; --blue:#6f98ff; --yellow:#ffd23f; --good:#3fd083; --bad:#ff6b6b; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141729; --dot:#23284a; --card:#1c2038; --sheet:#f4f5f8; --ink:#e9ebf8; --muted:#9ba1c4; --line:#31375c; --track:#2a3050;
+  --pink:#ff5aa8; --blue:#6f98ff; --yellow:#ffd23f; --good:#3fd083; --bad:#ff6b6b; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background-color:var(--paper);background-image:radial-gradient(var(--dot) 1px,transparent 1.5px);background-size:16px 16px;color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+.app{max-width:1160px;margin:0 auto;padding-block:18px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px}
+.logo{font-family:var(--f-display);font-weight:400;font-size:clamp(24px,4.2vw,34px);line-height:1;margin:0;color:var(--ink);text-shadow:3px 2px 0 var(--pink),-2px -2px 0 var(--blue)}
+.tabs{display:flex;gap:4px;background:var(--card);border:1.5px solid var(--ink);border-radius:999px;padding:3px}
+.tab{font:600 13px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;border:0;background:transparent;color:var(--ink);padding:9px 15px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--yellow);color:var(--on-yellow)}
+.wallet{font:13px var(--f-mono);color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.wallet b{color:var(--ink);font-weight:600}
+h2{font:400 15px/1.2 var(--f-display);letter-spacing:.02em;margin:0}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.panel.hero{border-color:var(--ink);box-shadow:5px 5px 0 var(--blue)}
+.btn{font:600 14px/1.2 var(--f-body);color:var(--ink);background:var(--card);border:1.5px solid var(--ink);border-radius:6px;padding:9px 12px;cursor:pointer;text-align:left;transition:transform .08s,box-shadow .08s}
+.btn:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:2px 2px 0 var(--ink)}
+.btn:active:not(:disabled){transform:none;box-shadow:none}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.primary{background:var(--pink);border-color:var(--pink);color:var(--on-pink)}
+.btn.big{font-size:16px;padding:13px 18px;text-align:center}
+.btn.link{border:0;background:none;padding:4px 0;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.btn.link:hover:not(:disabled){box-shadow:none;color:var(--ink)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.act{display:flex;flex-direction:column;gap:3px}
+.a-meta{font:12px/1.3 var(--f-mono);color:var(--muted)}
+.btn.primary .a-meta{color:inherit}
+.chip{display:inline-flex;align-items:center;font:700 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:var(--c);color:var(--cf)}
+.grade{font:400 12px/1 var(--f-display);border:1.5px solid var(--ink);border-radius:4px;padding:4px 7px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* Draw */
+.draw{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;align-items:start}
+.sheet-wrap{position:relative;max-width:540px;width:100%;margin-inline:auto;padding-top:6px}
+.sheet-wrap::before,.sheet-wrap::after{content:"";position:absolute;top:-6px;width:92px;height:26px;background:var(--yellow);opacity:.72;z-index:1;pointer-events:none}
+.sheet-wrap::before{left:22px;transform:rotate(-5deg)}
+.sheet-wrap::after{right:22px;transform:rotate(4deg)}
+#pad{display:block;width:100%;aspect-ratio:1;background:var(--sheet);border-radius:3px;box-shadow:6px 8px 0 var(--line);touch-action:none;cursor:crosshair}
+.sheet-note{font-size:13px;color:var(--muted);margin:12px 2px 0;min-height:1.4em}
+.tools{display:flex;flex-direction:column;gap:18px}
+.tools .title{font-size:24px;text-wrap:balance}
+.lede{margin:0;max-width:52ch}
+.swatches{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.sw{display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;padding:6px 0;cursor:pointer;color:var(--ink);font:700 10.5px var(--f-body);letter-spacing:.07em;text-transform:uppercase;border-radius:6px}
+.sw i{width:34px;height:34px;border-radius:50%;background:var(--c);border:3px solid var(--card);box-shadow:0 0 0 1.5px var(--line)}
+.sw[aria-pressed="true"] i{box-shadow:0 0 0 2.5px var(--ink)}
+.size{width:42px;height:42px;display:grid;place-items:center;padding:0}
+.size i{display:block;border-radius:50%;background:var(--ink);width:var(--d);height:var(--d)}
+.size[aria-pressed="true"]{background:var(--yellow);border-color:var(--ink)}
+.size[aria-pressed="true"] i{background:var(--on-yellow)}
+.proj{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.pcell{border:1.5px dashed var(--line);border-radius:6px;padding:7px 4px;text-align:center}
+.pcell b{display:block;font:600 19px/1.1 var(--f-mono);font-variant-numeric:tabular-nums}
+.pcell span{font:600 10.5px var(--f-mono);letter-spacing:.08em;color:var(--muted)}
+.label{font:600 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+.rules{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0;margin:0;font-size:14px}
+.rules dt,.rules dd{padding:7px 0;border-bottom:1px solid var(--line);margin:0}
+.rules dd{font:600 12px var(--f-mono);text-align:right;padding-left:12px;align-self:center}
+.replace-note{margin:0;font-size:13.5px;padding:10px 12px;border-left:3px solid var(--pink);background:var(--track);border-radius:0 6px 6px 0}
+
+/* Birth */
+.birth-card{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;border:1.5px solid var(--ink);box-shadow:6px 6px 0 var(--pink);background:var(--card);border-radius:8px;padding:20px}
+.birth-cv{width:100%;aspect-ratio:1;max-height:440px;display:block}
+.birth-info{display:flex;flex-direction:column;gap:14px;min-width:0}
+.eyebrow{font:600 12px var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--pink);margin:0}
+.name-input{font:400 26px/1.15 var(--f-display);color:var(--ink);background:transparent;border:0;border-bottom:2px dashed var(--line);width:100%;padding:2px 0;border-radius:0}
+.name-input:focus{outline:none;border-bottom-color:var(--blue)}
+.traits{list-style:none;padding:0;margin:0;display:flex;flex-direction:column}
+.traits li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);animation:rise .45s both;animation-delay:calc(var(--i) * 110ms)}
+.traits small{display:block;color:var(--muted);font:12px var(--f-mono)}
+.traits .out{font:600 14px var(--f-mono);align-self:center;text-align:right}
+@keyframes rise{from{transform:translateY(8px);opacity:.25}}
+
+/* Raise */
+.raise{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;align-items:start}
+.stage-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.stage-head .name-input{flex:1 1 160px;min-width:0;font-size:22px}
+.stage{width:100%;height:300px;display:block}
+.meters{display:flex;flex-direction:column;gap:9px}
+.meter{display:grid;grid-template-columns:76px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:13.5px}
+.track{height:10px;background:var(--track);border-radius:999px;overflow:hidden}
+.track i{display:block;height:100%;width:var(--v);background:var(--c);border-radius:inherit;transition:width .3s}
+.meter output{font:600 13px var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.mult{font:12px/1.5 var(--f-mono);color:var(--muted);margin:0}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px}
+.stat-rows{display:flex;flex-direction:column;gap:10px}
+.srow{display:grid;grid-template-columns:48px minmax(0,1fr) 44px;gap:10px;align-items:center}
+.srow .k{font:600 12px var(--f-mono);letter-spacing:.08em;color:var(--muted)}
+.srow .v{font:600 16px var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.sbar{position:relative;height:14px;background:var(--track);border-radius:3px}
+.sbar i{position:absolute;left:0;top:0;bottom:0;width:var(--v);background:var(--blue);border-radius:3px;transition:width .3s}
+.sbar b{position:absolute;top:-4px;bottom:-4px;width:3px;left:var(--o);background:var(--pink);border-radius:2px}
+.power{display:flex;justify-content:space-between;font:13px var(--f-mono);color:var(--muted);border-top:1px solid var(--line);padding-top:10px;gap:10px;flex-wrap:wrap}
+.power b{color:var(--ink)}
+.act-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.care-note{font-size:13px;margin:0;color:var(--bad);min-height:1.3em}
+.diary,.blog{list-style:none;margin:0;padding:0;font-size:13.5px;display:flex;flex-direction:column;gap:6px;max-height:230px;overflow:auto}
+.diary span,.blog span{font:12px var(--f-mono);color:var(--muted);margin-right:8px}
+.confirm{display:flex;flex-direction:column;gap:10px;padding:12px;border:1.5px solid var(--pink);border-radius:8px}
+.confirm p{margin:0}
+
+/* Arena */
+.arena{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:start}
+.ladder ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.lad{width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;border:1.5px solid transparent;border-radius:6px;background:none;color:var(--ink);font:600 14px/1.25 var(--f-body);text-align:left;cursor:pointer}
+.lad:hover:not(:disabled){border-color:var(--line)}
+.lad .n{font:600 12px var(--f-mono);color:var(--muted)}
+.lad small{display:block;font:400 12px var(--f-body);color:var(--muted)}
+.lad .st{font:600 11px var(--f-mono);letter-spacing:.06em}
+.lad .st.done{color:var(--good)}
+.lad[aria-current="true"]{border-color:var(--ink);background:var(--yellow);color:var(--on-yellow)}
+.lad[aria-current="true"] small,.lad[aria-current="true"] .n,.lad[aria-current="true"] .st{color:var(--on-yellow)}
+.lad:disabled{opacity:.4;cursor:not-allowed}
+.mode{display:flex}
+.mode button{flex:1}
+.online-box{display:flex;flex-direction:column;gap:10px}
+.online-box h3{font:600 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0 0}
+.net-status{font-size:13px;color:var(--muted);margin:0}
+.match{display:flex;flex-direction:column;gap:16px;min-width:0}
+.hp-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:end}
+.hp{min-width:0}
+.hp-name{font:400 15px/1.2 var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hp-track{height:12px;background:var(--track);border-radius:999px;overflow:hidden;margin-top:5px}
+.hp-track i{display:block;height:100%;width:100%;background:var(--good);transition:width .25s}
+.hp.right{text-align:right}
+.hp.right .hp-track{transform:scaleX(-1)}
+.hp-num{font:12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.vs{font:400 18px var(--f-display);color:var(--pink);padding-bottom:4px}
+.arena-cv{width:100%;height:300px;display:block}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--card);color:var(--ink);font:600 13px var(--f-mono);padding:9px 11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.result{border:2px solid var(--ink);border-radius:8px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.result.win{background:var(--yellow);color:var(--on-yellow)}
+.result.win .btn{color:var(--on-yellow);border-color:var(--on-yellow);background:transparent}
+.result.loss{background:var(--track)}
+.result strong{font:400 20px var(--f-display);display:block}
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.odds-big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+#oddsPct{font:400 46px/1 var(--f-display);color:var(--blue);font-variant-numeric:tabular-nums}
+.odds-bar{height:12px;border-radius:999px;background:var(--track);overflow:hidden}
+.odds-bar i{display:block;height:100%;background:var(--blue);transition:width .3s}
+.otable-wrap{overflow-x:auto}
+.otable{width:100%;border-collapse:collapse;font-size:13.5px}
+.otable th,.otable td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:right}
+.otable th:first-child,.otable td:first-child{text-align:left;color:var(--muted);font-weight:500}
+.otable td{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.otable thead th{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.el-note{margin:0;font-size:13.5px}
+.empty{text-align:center;padding:56px 16px;align-items:center}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:6px;font-weight:600;font-size:14px;width:max-content;max-width:calc(100vw - 32px);z-index:10;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+
+@media (min-width:881px){.stage-panel{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
+@media (max-width:880px){
+  .draw,.raise,.arena,.birth-card{grid-template-columns:minmax(0,1fr)}
+  #ladder{flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  #ladder li{flex:0 0 190px}
+}
+@media (max-width:640px){.lower{grid-template-columns:minmax(0,1fr)} .stage,.arena-cv{height:250px} .sw i{width:28px;height:28px}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1 class="logo">Inkborn Arena</h1>
+    <nav class="tabs" role="tablist" aria-label="Game sections">
+      <button class="tab" role="tab" id="tab-draw" data-view="draw" aria-selected="true">Draw</button>
+      <button class="tab" role="tab" id="tab-raise" data-view="raise" aria-selected="false">Raise</button>
+      <button class="tab" role="tab" id="tab-arena" data-view="arena" aria-selected="false">Arena</button>
+    </nav>
+    <div class="wallet" aria-live="polite">
+      <span>Day <b id="dayN">1</b></span>
+      <span><b id="coinN">30</b> coins</span>
+      <span>Record <b id="recN">0–0</b></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- DRAW -->
+    <section id="view-draw" class="view">
+      <div id="drawMain" class="draw">
+        <div class="sheet-wrap">
+          <canvas id="pad" aria-label="Drawing sheet"></canvas>
+          <p class="sheet-note" id="padNote"></p>
+        </div>
+        <div class="tools">
+          <div>
+            <h2 class="title">Draw your fighter</h2>
+          </div>
+          <p class="lede">Whatever you draw comes to life. Its shape sets its starting stats, and the ink you use most sets its element. After that, how you raise it decides how strong it gets.</p>
+          <p id="replaceNote" class="replace-note" hidden></p>
+          <div>
+            <p class="label">Ink</p>
+            <div class="swatches" id="swatches"></div>
+          </div>
+          <div class="row">
+            <span class="label" style="margin-right:4px">Brush</span>
+            <button class="btn size" id="sz-s" data-size="4" aria-pressed="false" aria-label="Thin brush"><i style="--d:5px"></i></button>
+            <button class="btn size" id="sz-m" data-size="9" aria-pressed="true" aria-label="Medium brush"><i style="--d:10px"></i></button>
+            <button class="btn size" id="sz-l" data-size="20" aria-pressed="false" aria-label="Thick brush"><i style="--d:18px"></i></button>
+            <span style="flex:1"></span>
+            <button class="btn" id="undoBtn">Undo</button>
+            <button class="btn" id="clearBtn">Clear</button>
+          </div>
+          <div>
+            <p class="label" style="margin-bottom:6px">Projected stats <span id="projEl"></span></p>
+            <div class="proj" id="proj"></div>
+          </div>
+          <button class="btn primary big" id="birthBtn">Bring it to life</button>
+          <dl class="rules">
+            <dt>Bigger on the page</dt><dd>more HP</dd>
+            <dt>Sharp corners and spikes</dt><dd>more ATK</dd>
+            <dt>Solid and symmetric</dt><dd>more DEF</dd>
+            <dt>Light, sparse lines</dt><dd>more SPD</dd>
+            <dt>More ink colors</dt><dd>more LUCK</dd>
+            <dt>Most-used ink</dt><dd>element</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div id="birth" hidden>
+        <div class="birth-card">
+          <canvas id="birthCv" class="birth-cv" aria-label="Your new fighter"></canvas>
+          <div class="birth-info">
+            <p class="eyebrow">It's alive</p>
+            <input id="birthName" class="name-input" maxlength="16" aria-label="Fighter name">
+            <div class="row" id="birthChips"></div>
+            <ul class="traits" id="birthTraits"></ul>
+            <div class="row">
+              <button class="btn" id="birthBack">Back to drawing</button>
+              <button class="btn primary" id="birthGo">Start raising</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RAISE -->
+    <section id="view-raise" class="view" hidden>
+      <div id="raiseEmpty" class="panel empty" hidden>
+        <h2>No fighter yet</h2>
+        <p class="sub">Draw something and bring it to life first.</p>
+        <button class="btn primary" data-goto="draw">Open the sketchbook</button>
+      </div>
+      <div id="raiseMain" class="raise">
+        <div class="panel hero stage-panel">
+          <div class="stage-head">
+            <input id="crName" class="name-input" maxlength="16" aria-label="Fighter name">
+            <span id="crEl" class="chip"></span>
+            <span id="crGrade" class="grade"></span>
+          </div>
+          <canvas id="stage" class="stage" aria-label="Your fighter"></canvas>
+          <div class="meters">
+            <div class="meter"><span>Fullness</span><div class="track"><i id="mFull" style="--c:var(--yellow)"></i></div><output id="vFull"></output></div>
+            <div class="meter"><span>Energy</span><div class="track"><i id="mEnergy" style="--c:var(--blue)"></i></div><output id="vEnergy"></output></div>
+            <div class="meter"><span>Mood</span><div class="track"><i id="mMood" style="--c:var(--pink)"></i></div><output id="vMood"></output></div>
+          </div>
+          <p class="mult" id="multNote"></p>
+        </div>
+
+        <div class="side">
+          <div class="panel">
+            <div class="panel-head"><h2>Stats</h2><span class="sub">Pink tick: your next rival, <b id="rivalName"></b></span></div>
+            <div class="stat-rows" id="statRows"></div>
+            <div class="power"><span>Your power <b id="powMe"></b></span><span>Rival power <b id="powOpp"></b></span></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>Train</h2><span class="sub">−20 energy · −12 fullness · −4 mood</span></div>
+            <div class="act-grid" id="trainBtns"></div>
+            <p class="care-note" id="careNote" aria-live="polite"></p>
+            <div class="panel-head"><h2>Feed</h2><span class="sub">Some foods have a chance to raise a stat</span></div>
+            <div class="act-grid" id="feedBtns"></div>
+            <div class="row">
+              <button class="btn act" id="playBtn"><span>Play together</span><span class="a-meta">+12–20 mood · −10 energy</span></button>
+              <button class="btn act" id="sleepBtn"><span>Sleep</span><span class="a-meta">Next day · full energy · +3 coins</span></button>
+              <button class="btn primary act" data-goto="arena"><span>Go to the arena</span><span class="a-meta">See your odds</span></button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Diary</h2>
+            <ol class="diary" id="diary"></ol>
+          </div>
+          <div>
+            <button class="btn link" id="newBtn">Release this fighter and draw a new one</button>
+            <div class="confirm" id="confirmNew" hidden>
+              <p id="confirmText"></p>
+              <div class="row"><button class="btn" id="confirmNo">Keep it</button><button class="btn primary" id="confirmYes">Release and start over</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARENA -->
+    <section id="view-arena" class="view" hidden>
+      <div id="arenaEmpty" class="panel empty" hidden>
+        <h2>No fighter yet</h2>
+        <p class="sub">The arena needs a fighter. Draw one first.</p>
+        <button class="btn primary" data-goto="draw">Open the sketchbook</button>
+      </div>
+      <div id="arenaMain" class="arena">
+        <aside class="panel ladder">
+          <div class="seg mode" role="group" aria-label="Rival type">
+            <button id="modeLadder" aria-pressed="true">Ladder</button><button id="modeOnline" aria-pressed="false">Online</button>
+          </div>
+          <ol id="ladder"></ol>
+          <div id="onlineBox" class="online-box" hidden>
+            <p id="netStatus" class="net-status">Connecting to the online arena…</p>
+            <div id="trainerRow" hidden>
+              <label class="label" for="trainerName">Your trainer name</label>
+              <input id="trainerName" class="name-input" style="font-size:16px" maxlength="24" placeholder="Shown next to your fighter">
+            </div>
+            <button class="btn" id="listBtn" hidden></button>
+            <ol id="onlineList"></ol>
+            <h3>Challenges against you</h3>
+            <ol id="defLog" class="blog"></ol>
+          </div>
+        </aside>
+        <div class="match">
+          <div class="panel hero">
+            <div class="hp-row">
+              <div class="hp" id="hpA"><div class="hp-name"></div><div class="hp-track"><i></i></div><span class="hp-num"></span></div>
+              <span class="vs">VS</span>
+              <div class="hp right" id="hpB"><div class="hp-name"></div><div class="hp-track"><i></i></div><span class="hp-num"></span></div>
+            </div>
+            <canvas id="arena" class="arena-cv" aria-label="Arena"></canvas>
+            <div id="result" class="result" hidden></div>
+            <div class="row">
+              <button class="btn primary" id="startFight">Fight · −30 energy</button>
+              <div class="seg" id="speedSeg" role="group" aria-label="Playback speed">
+                <button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button>
+              </div>
+              <button class="btn" id="skipBtn" disabled>Skip to end</button>
+            </div>
+            <p class="sub" id="fightNote"></p>
+          </div>
+          <div class="lower">
+            <div class="panel">
+              <h2>The odds</h2>
+              <div class="odds-big"><span id="oddsPct">–</span><span class="sub">chance to win, from 600 simulated fights</span></div>
+              <div class="odds-bar"><i id="oddsFill" style="width:0"></i></div>
+              <div class="otable-wrap">
+                <table class="otable">
+                  <thead><tr><th></th><th>You</th><th>Rival</th></tr></thead>
+                  <tbody id="oddsBody"></tbody>
+                </table>
+              </div>
+              <p class="el-note" id="elNote"></p>
+            </div>
+            <div class="panel">
+              <h2>Fight log</h2>
+              <ol class="blog" id="blog"><li>Pick a rival and press Fight. Every swing is a dice roll weighted by stats.</li></ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rint = (a, b, r = Math.random) => a + Math.floor(r() * (b - a + 1));
+const pct = v => Math.round(v * 100) + '%';
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PAD = 320;
+const KEY = 'inkborn-arena-v1';
+
+const INKS = [
+  { id: 'ink',   name: 'Ink',   color: '#1c1c28', fg: '#ffffff', move: 'Heavy hand',    trait: '+10% damage on every hit' },
+  { id: 'ember', name: 'Ember', color: '#e8452c', fg: '#ffffff', move: 'Burn',          trait: '20% chance to set the rival on fire for 3 turns' },
+  { id: 'tide',  name: 'Tide',  color: '#2f6fdf', fg: '#ffffff', move: 'Wash',          trait: '15% chance each turn to heal 12% HP' },
+  { id: 'moss',  name: 'Moss',  color: '#2ea35b', fg: '#ffffff', move: 'Regrow',        trait: 'Heals 3% HP every turn' },
+  { id: 'spark', name: 'Spark', color: '#f5b700', fg: '#1d2140', move: 'Double strike', trait: '15% chance to attack twice' },
+  { id: 'hex',   name: 'Hex',   color: '#8a4fd8', fg: '#ffffff', move: 'Blur',          trait: 'Rivals get −8% hit chance' },
+];
+const INK = Object.fromEntries(INKS.map(i => [i.id, i]));
+const BEATS = { ember: 'moss', moss: 'tide', tide: 'ember' };
+const AFF = { ink: null, ember: 'atk', tide: 'def', moss: 'hp', spark: 'spd', hex: 'luk' };
+const STATS = [['hp', 'HP'], ['atk', 'ATK'], ['def', 'DEF'], ['spd', 'SPD'], ['luk', 'LUCK']];
+const SN = Object.fromEntries(STATS);
+const TRAINS = [
+  { k: 'atk', name: 'Lift rocks' }, { k: 'def', name: 'Shield drills' }, { k: 'spd', name: 'Sprints' },
+  { k: 'hp', name: 'Long hike' }, { k: 'luk', name: 'Card tricks' },
+];
+const ROLL = { hp: [4, 9], luk: [1, 2], atk: [1, 3], def: [1, 3], spd: [1, 3] };
+const FOODS = [
+  { k: 'scraps',  name: 'Scraps',      cost: 0,  full: 10, mood: -5, desc: '+10 full · −5 mood' },
+  { k: 'berries', name: 'Berries',     cost: 4,  full: 22, mood: 4,  desc: '+22 full · +4 mood' },
+  { k: 'steak',   name: 'Steak',       cost: 12, full: 35, stat: 'atk', chance: .35, desc: '+35 full · 35%: +1 ATK' },
+  { k: 'fish',    name: 'Fish',        cost: 12, full: 35, stat: 'def', chance: .35, desc: '+35 full · 35%: +1 DEF' },
+  { k: 'fizz',    name: 'Fizzy drink', cost: 10, full: 5, energy: 25, mood: -2, desc: '+25 energy · −2 mood' },
+  { k: 'cake',    name: 'Cake',        cost: 18, full: 20, mood: 25, desc: '+20 full · +25 mood' },
+  { k: 'clover',  name: 'Clover',      cost: 30, full: 5, stat: 'luk', chance: .5, desc: '+5 full · 50%: +1 LUCK' },
+];
+const VENUES = ['Scribble Pit', 'The Margins', 'Doodle Alley', 'Inkwell', 'Crayon Crater', 'Chalk Court', 'Marker Mesa', 'Pen Peak', 'Brush Basin', 'The Final Page'];
+const DUR = { hit: 760, miss: 640, double: 320, burn: 520, heal: 480, end: 0 };
+const SYL1 = ['Glo', 'Bim', 'Zor', 'Pip', 'Mun', 'Kra', 'Fiz', 'Tok', 'Wub', 'Ree', 'Snor', 'Blip', 'Quo', 'Dax', 'Lum', 'Vex', 'Nub', 'Ork'];
+const SYL2 = ['rp', 'ble', 'zo', 'kin', 'rax', 'po', 'mo', 'tt', 'nik', 'gle', 'dor', 'sh', 'lo', 'bus', 'mip', 'ster'];
+const makeName = (r = Math.random) => SYL1[Math.floor(r() * SYL1.length)] + SYL2[Math.floor(r() * SYL2.length)];
+
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const power = s => s.hp / 5 + s.atk + s.def + s.spd + s.luk * 0.8;
+const grade = p => p < 0.96 ? 'C' : p < 1.06 ? 'B' : p < 1.18 ? 'A' : 'S';
+
+/* ---------- theme ---------- */
+let TH = {};
+function readTheme() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  TH = { ink: g('--ink'), muted: g('--muted'), line: g('--line'), card: g('--card'), pink: g('--pink'), blue: g('--blue'), good: g('--good'), bad: g('--bad'), sheet: g('--sheet') };
+}
+
+/* ---------- state ---------- */
+const newState = () => ({ cr: null, full: 70, energy: 100, mood: 70, coins: 30, day: 1, rank: 0, sel: 0, wins: 0, losses: 0, speed: 1, log: [], listed: false, mode: 'ladder', seenDef: 0 });
+let S = newState();
+let SPR = null;
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} scheduleSync(); }
+function load() { try { const j = localStorage.getItem(KEY); return j ? JSON.parse(j) : null; } catch (e) { return null; } }
+function diary(m) { S.log.unshift({ d: S.day, m }); S.log = S.log.slice(0, 40); }
+
+/* ---------- strokes ---------- */
+function renderStrokes(ctx, strokes) {
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const st of strokes) {
+    const p = st.p, col = INK[st.c].color;
+    if (p.length === 1) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(p[0][0], p[0][1], st.w / 2, 0, Math.PI * 2); ctx.fill(); continue; }
+    ctx.strokeStyle = col; ctx.lineWidth = st.w; ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length - 1; i++) { const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2; ctx.quadraticCurveTo(p[i][0], p[i][1], mx, my); }
+    const l = p[p.length - 1]; ctx.lineTo(l[0], l[1]); ctx.stroke();
+  }
+}
+
+function exampleStrokes() {
+  const body = [];
+  for (let i = 0; i <= 28; i++) { const a = i / 28 * Math.PI * 2; const r = 72 + Math.sin(a * 3) * 5; body.push([160 + Math.cos(a) * r, 178 + Math.sin(a) * r * 0.86]); }
+  const fill = [];
+  for (let y = 135; y <= 222; y += 13) { const half = Math.sqrt(Math.max(0, 1 - ((y - 178) / 62) ** 2)) * 58; fill.push([160 - half, y], [160 + half, y + 6]); }
+  return [
+    { c: 'tide', w: 20, p: fill },
+    { c: 'tide', w: 8, p: body },
+    { c: 'ember', w: 7, p: [[104, 128], [118, 86], [136, 116], [156, 74], [174, 112], [194, 82], [212, 124]] },
+    { c: 'ink', w: 7, p: [[132, 236], [124, 274], [146, 274]] },
+    { c: 'ink', w: 7, p: [[188, 236], [196, 274], [174, 274]] },
+    { c: 'ink', w: 5, p: [[140, 196], [152, 206], [166, 208], [180, 198]] },
+  ];
+}
+
+function genDoodle(r) {
+  const cols = INKS.map(i => i.id), main = cols[Math.floor(r() * cols.length)], acc = cols[Math.floor(r() * cols.length)];
+  const cx = 160, cy = 160 + r() * 20, R = 42 + r() * 48, n = 9 + Math.floor(r() * 6), spiky = r() < 0.5;
+  const pts = [];
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; const rr = R * (0.82 + r() * 0.3) * (spiky && i % 2 ? 1.28 : 1); pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * 0.85]); }
+  pts.push(pts[0].slice());
+  const strokes = [];
+  const fills = Math.floor(r() * 4);
+  if (fills) { const f = []; for (let y = cy - R * 0.55; y <= cy + R * 0.55; y += 22 - fills * 3) f.push([cx - R * 0.6, y], [cx + R * 0.6, y + 5]); strokes.push({ c: main, w: 14, p: f }); }
+  strokes.push({ c: main, w: 6 + r() * 4, p: pts });
+  const legs = 2 + Math.floor(r() * 3);
+  for (let l = 0; l < legs; l++) { const x = cx - R * 0.55 + l * (R * 1.1 / (legs - 1)), y0 = cy + R * 0.66; strokes.push({ c: 'ink', w: 6, p: [[x, y0], [x + (r() - .5) * 16, y0 + 22 + r() * 22], [x + (r() < .5 ? -10 : 10), y0 + 44]] }); }
+  if (r() < 0.65) for (const s of [-1, 1]) { const x0 = cx + s * R * 0.3, y0 = cy - R * 0.72; strokes.push({ c: acc, w: 5, p: [[x0, y0], [x0 + s * R * 0.25, y0 - R * 0.45]] }); strokes.push({ c: acc, w: 12, p: [[x0 + s * R * 0.25, y0 - R * 0.45]] }); }
+  if (r() < 0.5) strokes.push({ c: 'ink', w: 5, p: [[cx - R * 0.2, cy + R * 0.25], [cx - R * 0.07, cy + R * 0.33], [cx + R * 0.07, cy + R * 0.25], [cx + R * 0.2, cy + R * 0.33]] });
+  return { strokes, main };
+}
+
+/* ---------- drawing analysis ---------- */
+function strokeGeom(strokes) {
+  let corners = 0; const share = {};
+  for (const st of strokes) {
+    const p = st.p; let L = 0; const simp = [p[0]];
+    for (let i = 1; i < p.length; i++) {
+      L += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]);
+      const q = simp[simp.length - 1]; if (Math.hypot(p[i][0] - q[0], p[i][1] - q[1]) >= 7) simp.push(p[i]);
+    }
+    for (let i = 1; i < simp.length - 1; i++) {
+      const a = Math.atan2(simp[i][1] - simp[i - 1][1], simp[i][0] - simp[i - 1][0]);
+      const b = Math.atan2(simp[i + 1][1] - simp[i][1], simp[i + 1][0] - simp[i][0]);
+      let d = Math.abs(b - a); if (d > Math.PI) d = 2 * Math.PI - d; if (d > 1.4) corners++;
+    }
+    share[st.c] = (share[st.c] || 0) + L * st.w + st.w * st.w;
+  }
+  return { corners, share };
+}
+function analyze(strokes) {
+  if (!strokes.length) return null;
+  const N = 160, c = document.createElement('canvas'); c.width = c.height = N;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.scale(N / PAD, N / PAD); renderStrokes(x, strokes);
+  const d = x.getImageData(0, 0, N, N).data, occ = new Uint8Array(N * N);
+  let ink = 0, minx = N, miny = N, maxx = -1, maxy = -1, sx = 0;
+  for (let y = 0; y < N; y++) for (let X = 0; X < N; X++) if (d[(y * N + X) * 4 + 3] > 40) {
+    occ[y * N + X] = 1; ink++; sx += X; if (X < minx) minx = X; if (X > maxx) maxx = X; if (y < miny) miny = y; if (y > maxy) maxy = y;
+  }
+  if (ink < 25) return null;
+  const bw = maxx - minx + 1, bh = maxy - miny + 1, cx = sx / ink;
+  let m = 0;
+  for (let y = miny; y <= maxy; y++) for (let X = minx; X <= maxx; X++) if (occ[y * N + X]) { const mx = Math.round(2 * cx - X); if (mx >= 0 && mx < N && occ[y * N + mx]) m++; }
+  const g = strokeGeom(strokes); let tot = 0; for (const k in g.share) tot += g.share[k];
+  let dom = 'ink', best = -1, distinct = 0;
+  for (const k in g.share) { if (g.share[k] > best) { best = g.share[k]; dom = k; } if (g.share[k] / tot >= 0.08) distinct++; }
+  return { sizeFrac: bw * bh / (N * N), solidity: ink / (bw * bh), inkFrac: ink / (N * N), sym: m / ink, corners: g.corners, dom, distinct, n: strokes.length };
+}
+function baseStats(a) {
+  return {
+    hp: Math.round(clamp(34 + a.sizeFrac * 70 + a.inkFrac * 80, 30, 110)),
+    atk: Math.round(clamp(6 + Math.min(a.corners, 24) * 0.45 + (a.dom === 'ember' ? 1 : 0), 5, 18)),
+    def: Math.round(clamp(4 + a.solidity * 12 + a.sym * 6, 4, 16)),
+    spd: Math.round(clamp(14 - a.inkFrac * 30 - a.sizeFrac * 6 + (a.n <= 8 ? 2 : 0), 4, 16)),
+  };
+}
+
+/* ---------- stickers (the drawing, alive) ---------- */
+function makeSticker(strokes) {
+  const sc = 2, N = PAD * sc, c = document.createElement('canvas'); c.width = c.height = N;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.scale(sc, sc); renderStrokes(x, strokes);
+  const d = x.getImageData(0, 0, N, N).data;
+  let minx = N, miny = N, maxx = -1, maxy = -1, sx = 0, cnt = 0;
+  for (let y = 0; y < N; y += 2) for (let X = 0; X < N; X += 2) if (d[(y * N + X) * 4 + 3] > 30) { cnt++; sx += X; if (X < minx) minx = X; if (X > maxx) maxx = X; if (y < miny) miny = y; if (y > maxy) maxy = y; }
+  if (maxx < 0) { minx = miny = N / 2 - 20; maxx = maxy = N / 2 + 20; sx = N / 2; cnt = 1; }
+  const bw = maxx - minx + 1, bh = maxy - miny + 1, pad = 12 * sc, w = bw + pad * 2, h = bh + pad * 2;
+  const sil = document.createElement('canvas'); sil.width = w; sil.height = h;
+  const s = sil.getContext('2d'); s.drawImage(c, minx - pad, miny - pad, w, h, 0, 0, w, h);
+  s.globalCompositeOperation = 'source-in'; s.fillStyle = '#ffffff'; s.fillRect(0, 0, w, h);
+  const out = document.createElement('canvas'); out.width = w; out.height = h;
+  const o = out.getContext('2d');
+  for (const rad of [3 * sc, 6 * sc]) for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2; o.drawImage(sil, Math.cos(a) * rad, Math.sin(a) * rad); }
+  o.drawImage(c, minx - pad, miny - pad, w, h, 0, 0, w, h);
+  const r = clamp(Math.min(bw, bh) * 0.085, 7 * sc, 17 * sc);
+  return { c: out, w, h, pad, rel: bh / N, eye: { x: sx / cnt - minx + pad, y: bh * 0.34 + pad, r } };
+}
+
+function drawCreature(ctx, spr, x, y, hpx, o = {}) {
+  const t = o.t || 0, ph = o.phase || 0;
+  const hh = Math.min(hpx, (o.maxW || 1e9) * spr.h / spr.w), s = hh / spr.h;
+  const br = RM ? 0 : Math.sin(t * 2.4 + ph) * 0.03, alpha = o.alpha ?? 1, dx = o.dx || 0;
+  ctx.save(); ctx.globalAlpha = 0.13 * alpha; ctx.fillStyle = TH.ink; ctx.beginPath();
+  ctx.ellipse(x + dx, y, Math.max(10, spr.w * s * 0.4), Math.max(3, spr.w * s * 0.05), 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.translate(x + dx, y + (o.dy || 0)); if (o.rot) ctx.rotate(o.rot); if (o.flip) ctx.scale(-1, 1);
+  const sq = o.sq || 0; ctx.scale(s * (1 - br - sq * 0.6), s * (1 + br + sq)); ctx.globalAlpha = alpha;
+  ctx.drawImage(spr.c, -spr.w / 2, -spr.h + spr.pad);
+  if (!o.noEyes) {
+    const e = spr.eye, r = e.r, ex = e.x - spr.w / 2, ey = e.y - spr.h + spr.pad, gap = r * 1.25;
+    const blink = o.closed || (!RM && ((t + ph * 3) % 4.2) < 0.14), look = o.look || 0;
+    for (const sg of [-1, 1]) {
+      const cx = ex + sg * gap;
+      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#1c1c28'; ctx.lineWidth = r * 0.24; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, ey, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1c1c28';
+      if (o.ko) { ctx.beginPath(); ctx.moveTo(cx - r * .5, ey - r * .5); ctx.lineTo(cx + r * .5, ey + r * .5); ctx.moveTo(cx + r * .5, ey - r * .5); ctx.lineTo(cx - r * .5, ey + r * .5); ctx.stroke(); }
+      else if (blink) { ctx.beginPath(); ctx.moveTo(cx - r * .6, ey); ctx.lineTo(cx + r * .6, ey); ctx.stroke(); }
+      else {
+        const px = cx + look * r * 0.38;
+        ctx.beginPath(); ctx.arc(px, ey + r * 0.08, r * 0.48, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px - r * 0.15, ey - r * 0.1, r * 0.14, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
+  ctx.restore();
+  return y - hh;
+}
+
+/* ---------- floating text ---------- */
+const FL = { stage: [], arena: [] };
+function floatText(where, x, y, txt, col, size = 18) { FL[where].push({ x, y, txt, col, size, t0: performance.now(), life: 1100, dx: (Math.random() - .5) * 30 }); }
+function drawFloaters(ctx, arr, now) {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    const f = arr[i], p = (now - f.t0) / f.life;
+    if (p >= 1) { arr.splice(i, 1); continue; }
+    ctx.save(); ctx.globalAlpha = 1 - p * p; ctx.font = `600 ${f.size}px "IBM Plex Mono", ui-monospace, monospace`; ctx.textAlign = 'center';
+    const yy = f.y - p * 42, xx = f.x + f.dx * p;
+    ctx.lineWidth = 5; ctx.strokeStyle = TH.card; ctx.lineJoin = 'round'; ctx.strokeText(f.txt, xx, yy);
+    ctx.fillStyle = f.col; ctx.fillText(f.txt, xx, yy); ctx.restore();
+  }
+}
+function fit(cv) {
+  const w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return null;
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.round(w * dpr), H = Math.round(h * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+function floor(ctx, w, y) { ctx.save(); ctx.strokeStyle = TH.line; ctx.lineWidth = 1.5; ctx.setLineDash([4, 7]); ctx.beginPath(); ctx.moveTo(12, y + 6); ctx.lineTo(w - 12, y + 6); ctx.stroke(); ctx.restore(); }
+
+/* ---------- drawing pad ---------- */
+const pad = $('#pad'), pctx = pad.getContext('2d');
+let strokes = [], isExample = false, inkSel = 'ink', sizeSel = 9, cur = null;
+function sizePad() {
+  const w = pad.clientWidth; if (!w) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  pad.width = pad.height = Math.round(w * dpr); redrawPad();
+}
+function redrawPad() {
+  const W = pad.width; if (!W) return;
+  pctx.setTransform(1, 0, 0, 1, 0, 0); pctx.fillStyle = TH.sheet || '#fff'; pctx.fillRect(0, 0, W, W);
+  const s = W / PAD; pctx.setTransform(s, 0, 0, s, 0, 0);
+  pctx.strokeStyle = '#e3e8f2'; pctx.lineWidth = 1;
+  for (let g = 20; g < PAD; g += 20) { pctx.beginPath(); pctx.moveTo(g, 0); pctx.lineTo(g, PAD); pctx.moveTo(0, g); pctx.lineTo(PAD, g); pctx.stroke(); }
+  renderStrokes(pctx, strokes);
+}
+function padPoint(e) { const r = pad.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * PAD * 10) / 10, Math.round((e.clientY - r.top) / r.height * PAD * 10) / 10]; }
+pad.addEventListener('pointerdown', e => {
+  if (e.button > 0) return; e.preventDefault(); pad.setPointerCapture(e.pointerId);
+  if (isExample) isExample = false;
+  cur = { c: inkSel, w: sizeSel, p: [padPoint(e)] }; strokes.push(cur); redrawPad(); updatePadNote();
+});
+pad.addEventListener('pointermove', e => {
+  if (!cur) return; const p = padPoint(e), l = cur.p[cur.p.length - 1];
+  if (Math.hypot(p[0] - l[0], p[1] - l[1]) > 1.5) { cur.p.push(p); redrawPad(); }
+});
+const endStroke = () => { if (!cur) return; cur = null; updateProjected(); };
+pad.addEventListener('pointerup', endStroke); pad.addEventListener('pointercancel', endStroke);
+new ResizeObserver(() => sizePad()).observe(pad);
+
+function buildSwatches() {
+  $('#swatches').innerHTML = INKS.map(i => `<button class="sw" data-ink="${i.id}" id="ink-${i.id}" aria-pressed="${i.id === inkSel}" title="${i.name}: ${i.trait}"><i style="--c:${i.color}"></i>${i.name}</button>`).join('');
+  $('#swatches').onclick = e => { const b = e.target.closest('[data-ink]'); if (!b) return; inkSel = b.dataset.ink; document.querySelectorAll('.sw').forEach(x => x.setAttribute('aria-pressed', x === b)); };
+}
+document.querySelectorAll('.size').forEach(b => b.onclick = () => { sizeSel = +b.dataset.size; document.querySelectorAll('.size').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+$('#undoBtn').onclick = () => { strokes.pop(); redrawPad(); updateProjected(); };
+$('#clearBtn').onclick = () => { strokes = []; isExample = false; redrawPad(); updateProjected(); };
+function updatePadNote() {
+  $('#padNote').textContent = isExample ? 'Example doodle. Clear it and draw your own, or bring it to life as is.'
+    : strokes.length ? `${strokes.length} stroke${strokes.length > 1 ? 's' : ''}.` : 'Click and drag to draw. On a phone or tablet, use your finger.';
+}
+function updateProjected() {
+  updatePadNote();
+  const a = analyze(strokes), b = a ? baseStats(a) : null;
+  $('#proj').innerHTML = STATS.map(([k, n]) => `<div class="pcell"><b>${b ? (k === 'luk' ? (1 + Math.round(a.distinct * 1.5)) + '+' : b[k]) : '–'}</b><span>${n}</span></div>`).join('');
+  $('#projEl').innerHTML = a ? ` · <span class="chip" style="--c:${INK[a.dom].color};--cf:${INK[a.dom].fg}">${INK[a.dom].name}</span>` : '';
+  const rn = $('#replaceNote');
+  rn.hidden = !S.cr; if (S.cr) rn.textContent = `You are raising ${S.cr.name}. Bringing a new drawing to life will replace it and reset your coins and rank.`;
+}
+
+/* ---------- birth ---------- */
+let pending = null, pendingSpr = null, birthT0 = 0, replaceArmed = false;
+$('#birthBtn').onclick = () => {
+  const a = analyze(strokes);
+  if (!a) { toast('Draw a bit more first. Your fighter needs some ink.'); return; }
+  const base = baseStats(a), luk = Math.round(clamp(1 + a.distinct * 1.5 + Math.random() * 3, 1, 10)), pot = 0.85 + Math.random() * 0.45;
+  pending = { name: makeName(), strokes: JSON.parse(JSON.stringify(strokes)), stats: { ...base, luk }, el: a.dom, pot: Math.round(pot * 100) / 100, a };
+  pendingSpr = makeSticker(pending.strokes); birthT0 = performance.now(); replaceArmed = false;
+  const s = pending.stats, el = INK[pending.el], g = grade(pending.pot);
+  $('#birthName').value = pending.name;
+  $('#birthChips').innerHTML = `<span class="chip" style="--c:${el.color};--cf:${el.fg}">${el.name}</span><span class="grade">Grade ${g}</span>`;
+  const rows = [
+    ['Size on the page', pct(a.sizeFrac) + ' of the sheet', `HP ${s.hp}`],
+    ['Sharp corners', `${a.corners} found`, `ATK ${s.atk}`],
+    ['Solid fill · symmetry', `${pct(a.solidity)} · ${pct(a.sym)}`, `DEF ${s.def}`],
+    ['Ink weight', `${pct(a.inkFrac)} covered`, `SPD ${s.spd}`],
+    ['Ink colors used', `${a.distinct} + a dice roll`, `LUCK ${s.luk}`],
+    ['Most-used ink', `${el.name}: ${el.trait}`, el.move],
+    ['Growth potential', `×${pending.pot.toFixed(2)} on all training, rolled at birth`, `Grade ${g}`],
+  ];
+  $('#birthTraits').innerHTML = rows.map((r, i) => `<li style="--i:${i}"><div>${r[0]}<small>${r[1]}</small></div><span class="out">${r[2]}</span></li>`).join('');
+  $('#birthGo').textContent = S.cr ? `Replace ${S.cr.name}` : 'Start raising';
+  $('#drawMain').hidden = true; $('#birth').hidden = false;
+};
+$('#birthBack').onclick = () => { pending = null; $('#birth').hidden = true; $('#drawMain').hidden = false; requestAnimationFrame(sizePad); };
+$('#birthGo').onclick = () => {
+  if (!pending) return;
+  if (S.cr && !replaceArmed) { replaceArmed = true; $('#birthGo').textContent = `Tap again to release ${S.cr.name}`; return; }
+  const name = ($('#birthName').value || pending.name).trim().slice(0, 16) || pending.name;
+  const keep = { speed: S.speed, listed: S.listed, mode: S.mode };
+  S = Object.assign(newState(), keep);
+  S.cr = { name, strokes: pending.strokes, stats: pending.stats, el: pending.el, pot: pending.pot, born: Date.now() };
+  SPR = pendingSpr; pending = null; oddsCache = {};
+  diary(`${name} crawled off the page. Starting power ${Math.round(power(S.cr.stats))}.`);
+  save();
+  $('#birth').hidden = true; $('#drawMain').hidden = false;
+  strokes = []; isExample = false; redrawPad(); updateProjected();
+  show('raise');
+};
+function renderBirth(now) {
+  const f = fit($('#birthCv')); if (!f || !pendingSpr) return;
+  const { ctx, w, h } = f, t = (now - birthT0) / 1000;
+  let sc = 1, dx = 0, noEyes = false, closed = false;
+  if (!RM) {
+    if (t < 0.7) { dx = Math.sin(t * 70) * 5 * (t / 0.7); noEyes = true; }
+    else if (t < 1.15) { const p = (t - 0.7) / 0.45; sc = 1 + Math.sin(p * Math.PI) * 0.16; closed = p < 0.6; }
+  }
+  const base = h * 0.86;
+  floor(ctx, w, base);
+  if (!RM && t > 0.65 && t < 1.6) {
+    const p = (t - 0.65) / 0.95;
+    ctx.save(); ctx.globalAlpha = 1 - p; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2, r0 = w * 0.2 + p * w * 0.18, r1 = r0 + 18; ctx.strokeStyle = INKS[k % 6].color; ctx.beginPath(); ctx.moveTo(w / 2 + Math.cos(a) * r0, h * 0.5 + Math.sin(a) * r0); ctx.lineTo(w / 2 + Math.cos(a) * r1, h * 0.5 + Math.sin(a) * r1); ctx.stroke(); }
+    ctx.restore();
+  }
+  drawCreature(ctx, pendingSpr, w / 2, base, h * (0.42 + 0.4 * pendingSpr.rel) * sc, { t, dx, noEyes, closed, maxW: w * 0.85, look: Math.sin(t * 0.8) * 0.6 });
+}
+
+/* ---------- raising ---------- */
+let ANIM = null, STAGE_TOP = 100;
+function trainMult(k) {
+  const moodF = 0.6 + S.mood / 100 * 0.5, fullF = S.full < 15 ? 0 : S.full < 35 ? 0.7 : 1, aff = AFF[S.cr.el] === k ? 1.25 : 1;
+  return { m: S.cr.pot * moodF * fullF * aff, moodF, fullF, aff };
+}
+function stageFloat(txt, col) { const cv = $('#stage'); floatText('stage', cv.clientWidth / 2 + (Math.random() - .5) * 60, STAGE_TOP - 6, txt, col, 18); }
+function act(k, dur = 700) { ANIM = { k, t0: performance.now(), dur }; }
+function train(k) {
+  const tr = TRAINS.find(t => t.k === k), n = S.cr.name;
+  if (S.energy < 20 || S.full < 15) return;
+  const { m } = trainMult(k);
+  S.energy -= 20; S.full = Math.max(0, S.full - 12);
+  if (S.mood < 30 && Math.random() < 0.3) {
+    S.mood = Math.max(0, S.mood - 2); act('sad', 900);
+    diary(`${n} sulked through ${tr.name.toLowerCase()} and learned nothing. Low mood makes it slack off.`); stageFloat('sulking…', TH.muted);
+  } else {
+    const [lo, hi] = ROLL[k]; let gain = Math.max(k === 'hp' ? 1 : 0, Math.round(rint(lo, hi) * m));
+    const great = Math.random() < 0.08 + S.cr.stats.luk * 0.006; if (great) gain *= 2;
+    S.cr.stats[k] += gain; S.mood = Math.max(0, S.mood - 4); act('train', 800);
+    diary(great ? `Breakthrough! ${tr.name} doubled the gains: +${gain} ${SN[k]}.` : gain ? `${tr.name}: +${gain} ${SN[k]}.` : `${tr.name}: barely any progress. Mood and fullness boost training.`);
+    stageFloat(`+${gain} ${SN[k]}`, great ? TH.pink : TH.blue);
+  }
+  after();
+}
+function feed(k) {
+  const f = FOODS.find(x => x.k === k), n = S.cr.name; if (S.coins < f.cost) return;
+  S.coins -= f.cost; let msg = `${n} ate ${f.name.toLowerCase()}.`;
+  if (S.full + f.full > 110) { S.full = 100; S.mood = Math.max(0, S.mood - 8); msg += ' Way too full: −8 mood.'; }
+  else S.full = Math.min(100, S.full + f.full);
+  if (f.mood) S.mood = clamp(S.mood + f.mood, 0, 100);
+  if (f.energy) S.energy = Math.min(100, S.energy + f.energy);
+  if (f.stat) { if (Math.random() < f.chance) { S.cr.stats[f.stat] += 1; msg += ` Lucky bite: +1 ${SN[f.stat]}.`; stageFloat(`+1 ${SN[f.stat]}`, TH.pink); } else msg += ' No stat boost this time.'; }
+  else stageFloat(f.energy ? `+${f.energy} energy` : `+${f.full} full`, TH.good);
+  act('eat', 700); diary(msg); after();
+}
+function play() {
+  if (S.energy < 10) return;
+  const g = 12 + rint(0, 8); S.mood = Math.min(100, S.mood + g); S.energy -= 10; S.full = Math.max(0, S.full - 5);
+  act('hop', 900); stageFloat(`+${g} mood`, TH.pink); diary(`You played tag with ${S.cr.name}. +${g} mood.`); after();
+}
+function sleep() {
+  const hungry = S.full < 15; S.day++; S.energy = 100; S.full = Math.max(0, S.full - 25); S.mood = clamp(S.mood + (hungry ? -15 : 5), 0, 100); S.coins += 3;
+  act('sleep', 1200); stageFloat('z z z', TH.muted);
+  diary(hungry ? `Went to bed hungry. −15 mood. Found 3 coins.` : `Slept well. Energy is full again. Found 3 coins.`); after();
+}
+function after() { save(); renderHeader(); renderRaise(); }
+
+function buildCare() {
+  $('#trainBtns').innerHTML = TRAINS.map(t => `<button class="btn act" id="tr-${t.k}" data-k="${t.k}"><span>${t.name}</span><span class="a-meta"></span></button>`).join('');
+  $('#feedBtns').innerHTML = FOODS.map(f => `<button class="btn act" id="fd-${f.k}" data-k="${f.k}"><span>${f.name} · ${f.cost ? f.cost + 'c' : 'free'}</span><span class="a-meta">${f.desc}</span></button>`).join('');
+  $('#trainBtns').onclick = e => { const b = e.target.closest('[data-k]'); if (b && !b.disabled) train(b.dataset.k); };
+  $('#feedBtns').onclick = e => { const b = e.target.closest('[data-k]'); if (b && !b.disabled) feed(b.dataset.k); };
+  $('#playBtn').onclick = play; $('#sleepBtn').onclick = sleep;
+}
+function renderRaise() {
+  const has = !!S.cr; $('#raiseEmpty').hidden = has; $('#raiseMain').hidden = !has; if (!has) return;
+  const cr = S.cr, el = INK[cr.el];
+  if (document.activeElement !== $('#crName')) $('#crName').value = cr.name;
+  const chip = $('#crEl'); chip.textContent = el.name; chip.style.setProperty('--c', el.color); chip.style.setProperty('--cf', el.fg); chip.title = el.trait;
+  $('#crGrade').textContent = 'Grade ' + grade(cr.pot);
+  for (const [id, v] of [['Full', S.full], ['Energy', S.energy], ['Mood', S.mood]]) { $('#m' + id).style.setProperty('--v', v + '%'); $('#v' + id).textContent = Math.round(v); }
+  const tm = trainMult('none');
+  $('#multNote').textContent = `Training power ×${tm.m.toFixed(2)} = potential ×${cr.pot.toFixed(2)} · mood ×${tm.moodF.toFixed(2)} · fullness ×${tm.fullF.toFixed(2)}` + (AFF[cr.el] ? ` · ${el.name} trains ${SN[AFF[cr.el]]} ×1.25` : '');
+  const opp = oppFor(S.rank);
+  $('#rivalName').textContent = opp.name;
+  $('#statRows').innerHTML = STATS.map(([k, n]) => {
+    const v = cr.stats[k], o = opp.stats[k], ref = Math.max(v, o) * 1.15;
+    return `<div class="srow"><span class="k">${n}</span><div class="sbar" title="Rival ${o}"><i style="--v:${v / ref * 100}%"></i><b style="--o:calc(${o / ref * 100}% - 1px)"></b></div><span class="v">${v}</span></div>`;
+  }).join('');
+  $('#powMe').textContent = Math.round(power(cr.stats)); $('#powOpp').textContent = Math.round(power(opp.stats));
+  const tired = S.energy < 20, hungry = S.full < 15;
+  for (const t of TRAINS) {
+    const b = $('#tr-' + t.k), { m } = trainMult(t.k), [lo, hi] = ROLL[t.k];
+    const a = Math.max(t.k === 'hp' ? 1 : 0, Math.round(lo * m)), z = Math.round(hi * m);
+    b.querySelector('.a-meta').textContent = `${SN[t.k]} +${a === z ? a : a + '–' + z}${AFF[cr.el] === t.k ? ' · affinity' : ''}`;
+    b.disabled = tired || hungry;
+  }
+  $('#careNote').textContent = hungry ? `${cr.name} is too hungry to train. Feed it first.` : tired ? `${cr.name} is too tired to train. Let it sleep.` : S.mood < 30 ? `Low mood: 30% chance it slacks off. Play or give it cake.` : '';
+  for (const f of FOODS) $('#fd-' + f.k).disabled = S.coins < f.cost;
+  $('#playBtn').disabled = S.energy < 10;
+  $('#diary').innerHTML = S.log.map(l => `<li><span>Day ${l.d}</span>${esc(l.m)}</li>`).join('');
+}
+function renderStage(now) {
+  const f = fit($('#stage')); if (!f || !SPR) return;
+  const { ctx, w, h } = f, t = now / 1000, base = h * 0.86;
+  floor(ctx, w, base);
+  let dy = 0, sq = 0, dx = 0, closed = false;
+  if (ANIM) {
+    const p = (now - ANIM.t0) / ANIM.dur;
+    if (p >= 1) ANIM = null;
+    else if (!RM) {
+      if (ANIM.k === 'hop') dy = -Math.abs(Math.sin(p * Math.PI * 2)) * 24;
+      if (ANIM.k === 'train') { sq = Math.sin(p * Math.PI * 6) * 0.07; dx = Math.sin(p * Math.PI * 8) * 4; }
+      if (ANIM.k === 'eat') sq = -Math.abs(Math.sin(p * Math.PI * 4)) * 0.06;
+      if (ANIM.k === 'sad') dy = Math.sin(p * Math.PI) * 6;
+      if (ANIM.k === 'sleep') closed = true;
+    }
+  }
+  if (S.energy < 20) closed = closed || ((t % 3) < 1.2);
+  STAGE_TOP = drawCreature(ctx, SPR, w / 2, base, h * (0.4 + 0.42 * SPR.rel), { t, dx, dy, sq, closed, maxW: w * 0.8, look: Math.sin(t * 0.7) * 0.6 });
+  drawFloaters(ctx, FL.stage, now);
+}
+
+/* ---------- opponents & battle math ---------- */
+const oppCache = {};
+function oppFor(i) {
+  if (oppCache[i]) return oppCache[i];
+  const r = mulberry32(i * 7919 + 101), { strokes: st, main } = genDoodle(r);
+  const s = { hp: 36, atk: 5, def: 4, spd: 5, luk: 2 }, keys = Object.keys(s);
+  const w = { hp: 1 + r(), atk: .6 + r(), def: .6 + r(), spd: .6 + r(), luk: .3 + r() * .6 };
+  const budget = 36 + i * 11; let guard = 0;
+  while (power(s) < budget && guard++ < 800) {
+    let tot = 0; for (const k of keys) tot += w[k];
+    let x = r() * tot, pick = 'hp'; for (const k of keys) { x -= w[k]; if (x <= 0) { pick = k; break; } }
+    if (pick === 'hp') s.hp += 5; else s[pick] += 1;
+  }
+  const o = { kind: 'ladder', key: 'L' + i, i, name: makeName(r), strokes: st, stats: s, el: main, venue: VENUES[i] || `Encore ${i - VENUES.length + 1}` };
+  o.spr = makeSticker(st);
+  return (oppCache[i] = o);
+}
+const me = () => ({ name: S.cr.name, el: S.cr.el, stats: S.cr.stats });
+function fighter(src) { const s = src.stats; return { name: src.name, el: src.el, max: s.hp, hp: s.hp, atk: s.atk, def: s.def, spd: s.spd, luk: s.luk, burn: 0, burnDmg: 0, g: 0 }; }
+const hitChance = (a, d) => clamp(0.88 + (a.spd - d.spd) * 0.008 - d.luk * 0.01 - (d.el === 'hex' ? 0.08 : 0), 0.45, 0.97);
+const critChance = a => clamp(0.04 + a.luk * 0.012, 0, 0.5);
+const elMult = (a, d) => (BEATS[a.el] === d.el ? 1.25 : BEATS[d.el] === a.el ? 0.8 : 1) * (a.el === 'ink' ? 1.1 : 1);
+const baseDmg = (a, d) => a.atk * (40 / (40 + d.def * 2.2)) * elMult(a, d);
+function simulate(A, B, rnd, rec) {
+  const f = [fighter(A), fighter(B)]; f[0].g = rnd() * 30; f[1].g = rnd() * 30;
+  const ev = rec ? [] : null; let turns = 0;
+  const push = e => { if (ev) { e.hp = [Math.max(0, f[0].hp), Math.max(0, f[1].hp)]; ev.push(e); } };
+  while (f[0].hp > 0 && f[1].hp > 0 && turns < 90) {
+    let i = -1;
+    while (i < 0) { for (const x of f) x.g += x.spd * (0.9 + rnd() * 0.2) + 3; if (f[0].g >= 100 || f[1].g >= 100) i = f[0].g >= f[1].g ? 0 : 1; }
+    const a = f[i], d = f[1 - i]; a.g -= 100; turns++;
+    if (a.burn > 0) { a.burn--; a.hp -= a.burnDmg; push({ t: 'burn', who: i, dmg: a.burnDmg }); if (a.hp <= 0) break; }
+    if (a.el === 'moss' && a.hp < a.max) { const amt = Math.min(a.max - a.hp, Math.max(1, Math.round(a.max * 0.03))); a.hp += amt; push({ t: 'heal', who: i, amt, kind: 'moss' }); }
+    if (a.el === 'tide' && a.hp < a.max && rnd() < 0.15) { const amt = Math.min(a.max - a.hp, Math.round(a.max * 0.12)); a.hp += amt; push({ t: 'heal', who: i, amt, kind: 'tide' }); }
+    const strikes = (a.el === 'spark' && rnd() < 0.15) ? 2 : 1;
+    for (let k = 0; k < strikes && d.hp > 0; k++) {
+      if (k === 1) push({ t: 'double', who: i });
+      if (rnd() >= hitChance(a, d)) { push({ t: 'miss', who: i }); continue; }
+      const crit = rnd() < critChance(a);
+      const dmg = Math.max(1, Math.round(baseDmg(a, d) * (0.85 + rnd() * 0.3) * (crit ? 1.7 : 1)));
+      d.hp -= dmg; let burned = false;
+      if (a.el === 'ember' && d.hp > 0 && rnd() < 0.2) { d.burn = 3; d.burnDmg = Math.max(1, Math.round(a.atk * 0.25)); burned = true; }
+      push({ t: 'hit', who: i, dmg, crit, burned });
+    }
+  }
+  const timeout = f[0].hp > 0 && f[1].hp > 0;
+  const winner = f[0].hp <= 0 ? 1 : f[1].hp <= 0 ? 0 : (f[0].hp / f[0].max >= f[1].hp / f[1].max ? 0 : 1);
+  if (ev) ev.push({ t: 'end', winner, timeout, hp: [Math.max(0, f[0].hp), Math.max(0, f[1].hp)] });
+  return { winner, ev };
+}
+let oddsCache = {};
+function odds(opp) {
+  const key = JSON.stringify(S.cr.stats) + S.cr.el + '|' + opp.key + JSON.stringify(opp.stats) + opp.el;
+  if (oddsCache[key] != null) return oddsCache[key];
+  let w = 0; const n = 600, m = me();
+  for (let k = 0; k < n; k++) if (simulate(m, opp, Math.random, false).winner === 0) w++;
+  return (oddsCache[key] = w / n);
+}
+
+/* ---------- arena ---------- */
+let B = { running: false, done: false };
+let FA = [{ lunge: -1, hurt: -1, ko: -1 }, { lunge: -1, hurt: -1, ko: -1 }];
+const TOPS = [100, 100];
+function selectedOpp() { if (S.mode === 'online') return SELO ? onlineOpp(SELO) : null; return oppFor(S.sel); }
+const currentOpp = () => (B.running || B.done) ? B.opp : selectedOpp();
+const rewardFor = i => i === S.rank ? 15 + i * 8 : 5 + i * 2;
+const onlineReward = o => clamp(12 + Math.round((power(o.stats) - power(S.cr.stats)) / 2), 5, 60);
+function canFight() { return S.cr && !B.running && S.energy >= 30 && S.full >= 15 && !!selectedOpp(); }
+function renderAside() {
+  const online = S.mode === 'online';
+  $('#modeLadder').setAttribute('aria-pressed', !online); $('#modeOnline').setAttribute('aria-pressed', online);
+  $('#modeLadder').disabled = $('#modeOnline').disabled = B.running;
+  $('#ladder').hidden = online; $('#onlineBox').hidden = !online;
+  if (online) renderOnline(); else renderLadder();
+}
+function setMode(m) { if (B.running) return; S.mode = m; B = { running: false, done: false }; resetFA(); $('#result').hidden = true; save(); renderArenaUI(); }
+$('#modeLadder').onclick = () => setMode('ladder');
+$('#modeOnline').onclick = () => setMode('online');
+function renderLadder() {
+  const top = Math.max(VENUES.length - 1, S.rank);
+  let h = '';
+  for (let i = 0; i <= top; i++) {
+    const o = oppFor(i), cleared = i < S.rank, locked = i > S.rank;
+    h += `<li><button class="lad" data-i="${i}" id="lad-${i}" aria-current="${i === S.sel}" ${locked || B.running ? 'disabled' : ''}><span class="n">${String(i + 1).padStart(2, '0')}</span><span>${o.name}<small>${o.venue} · power ${Math.round(power(o.stats))}</small></span><span class="st ${cleared ? 'done' : ''}">${cleared ? 'BEAT' : i === S.rank ? 'NEXT' : ''}</span></button></li>`;
+  }
+  $('#ladder').innerHTML = h;
+  const cur = $('#lad-' + S.sel); if (cur && cur.scrollIntoView && window.matchMedia('(max-width:880px)').matches) cur.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+$('#ladder').onclick = e => {
+  const b = e.target.closest('[data-i]'); if (!b || b.disabled) return;
+  S.sel = +b.dataset.i; B = { running: false, done: false }; resetFA(); $('#result').hidden = true; save(); renderArenaUI();
+};
+function resetFA() { FA = [{ lunge: -1, hurt: -1, ko: -1 }, { lunge: -1, hurt: -1, ko: -1 }]; FL.arena = []; }
+function setHp(el, name, hp, max) { el.querySelector('.hp-name').textContent = name; el.querySelector('.hp-track i').style.width = (hp / max * 100) + '%'; el.querySelector('.hp-num').textContent = `${hp} / ${max} HP`; }
+function updateHp() { const o = B.opp; setHp($('#hpA'), S.cr.name, B.hp[0], S.cr.stats.hp); setHp($('#hpB'), o.name, B.hp[1], o.stats.hp); }
+function renderArenaUI() {
+  const has = !!S.cr; $('#arenaEmpty').hidden = has; $('#arenaMain').hidden = !has; if (!has) return;
+  S.sel = Math.min(S.sel, S.rank);
+  renderAside();
+  const opp = currentOpp(), m = fighter(me());
+  if (!B.running && !B.done) setHp($('#hpA'), S.cr.name, m.max, m.max);
+  if (!opp) {
+    const hb = $('#hpB'); hb.querySelector('.hp-name').textContent = 'No rival picked'; hb.querySelector('.hp-track i').style.width = '0%'; hb.querySelector('.hp-num').textContent = '';
+    $('#oddsPct').textContent = '–'; $('#oddsFill').style.width = '0'; $('#oddsBody').innerHTML = '';
+    $('#elNote').textContent = 'Pick an online rival from the list to see your odds.';
+    $('#fightNote').textContent = NET.status === 'on' ? 'Pick an online rival from the list.' : netMessage();
+    $('#startFight').disabled = true; $('#skipBtn').disabled = !B.running;
+    document.querySelectorAll('#speedSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.speed === S.speed));
+    return;
+  }
+  const o = fighter(opp);
+  if (!B.running && !B.done) setHp($('#hpB'), opp.name, o.max, o.max);
+  const p = odds(opp);
+  $('#oddsPct').textContent = pct(p); $('#oddsFill').style.width = (p * 100) + '%';
+  const range = (a, d) => { const b = baseDmg(a, d); const lo = Math.max(1, Math.round(b * 0.85)), hi = Math.max(1, Math.round(b * 1.15)); return lo === hi ? lo : `${lo}–${hi}`; };
+  const avg = (a, d) => Math.max(1, baseDmg(a, d) * (1 + critChance(a) * 0.7) * hitChance(a, d));
+  const rows = [
+    ['Max HP', m.max, o.max],
+    ['Hit chance', pct(hitChance(m, o)), pct(hitChance(o, m))],
+    ['Crit chance (×1.7)', pct(critChance(m)), pct(critChance(o))],
+    ['Damage per hit', range(m, o), range(o, m)],
+    ['Swings to knock out', '≈ ' + Math.ceil(o.max / avg(m, o)), '≈ ' + Math.ceil(m.max / avg(o, m))],
+    ['Share of turns', pct(m.spd / (m.spd + o.spd)), pct(o.spd / (m.spd + o.spd))],
+    ['Element', INK[m.el].name, INK[o.el].name],
+  ];
+  $('#oddsBody').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+  const em = INK[m.el], eo = INK[o.el];
+  let note = `${em.name}: ${em.trait}. Rival ${eo.name}: ${eo.trait}.`;
+  if (BEATS[m.el] === o.el) note += ` Your ${em.name} beats their ${eo.name}: +25% damage.`;
+  else if (BEATS[o.el] === m.el) note += ` Their ${eo.name} beats your ${em.name}: they deal +25%, you deal −20%.`;
+  $('#elNote').textContent = note;
+  let fn;
+  if (opp.kind === 'online') fn = `Win: +${onlineReward(opp)} coins. Lose: +4 coins, −12 mood.` + (NET.readonly ? ' Results are not saved on this link.' : ' The result is posted to the online arena.');
+  else fn = `Win: +${rewardFor(opp.i)} coins${opp.i === S.rank ? ' and the next rank unlocks' : ' (rematch)'}. Lose: +4 coins, −12 mood.`;
+  if (!B.running) { if (S.energy < 30) fn = `Not enough energy to fight (${S.energy}/30). Sleep first.`; else if (S.full < 15) fn = `${S.cr.name} is too hungry to fight. Feed it first.`; }
+  $('#fightNote').textContent = fn;
+  $('#startFight').disabled = !canFight();
+  $('#skipBtn').disabled = !B.running;
+  document.querySelectorAll('#speedSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.speed === S.speed));
+}
+function blog(m) { const li = document.createElement('li'); li.innerHTML = m; const ol = $('#blog'); ol.prepend(li); while (ol.children.length > 60) ol.lastChild.remove(); }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+$('#startFight').onclick = async () => {
+  if (!canFight()) return;
+  const opp = selectedOpp(), p = odds(opp);
+  let res;
+  if (opp.kind === 'online' && NET.kind === 'server') {
+    // The server runs online fights so nobody can fake a result. It fights with your posted fighter.
+    $('#startFight').disabled = true;
+    try {
+      if (!S.listed) { S.listed = true; toast(`${S.cr.name} entered the online arena so the server can run the fight.`); }
+      clearTimeout(syncT); await (writeQ = writeQ.catch(() => {}).then(pushFighter));
+      const c = await ensureCred();
+      res = await api('POST', 'fight', { id: c.id, secret: c.secret, defender: opp.uid });
+      if (!res || !Array.isArray(res.ev) || !res.ev.length) throw new Error('bad');
+    } catch (e) { toast(e && e.msg ? e.msg : 'The server could not run that fight. Try again.'); renderArenaUI(); return; }
+    if (B.running) return;
+  } else res = simulate(me(), opp, Math.random, true);
+  S.energy -= 30; S.full = Math.max(0, S.full - 10); save();
+  B = { running: true, done: false, opp, res, i: 0, hp: [S.cr.stats.hp, opp.stats.hp], timer: 0, odds: p };
+  resetFA(); $('#blog').innerHTML = ''; $('#result').hidden = true;
+  blog(`<span>start</span>${esc(S.cr.name)} vs ${esc(opp.name)} at ${opp.venue}. Odds ${pct(p)}.`);
+  updateHp(); renderArenaUI(); renderHeader();
+  B.timer = setTimeout(step, 500 / S.speed);
+};
+function step() {
+  if (!B.running) return;
+  const e = B.res.ev[B.i++]; if (!e) return finish();
+  apply(e);
+  if (e.t === 'end') return finish();
+  B.timer = setTimeout(step, (DUR[e.t] || 500) / S.speed);
+}
+function apply(e) {
+  const now = performance.now(), names = [S.cr.name, B.opp.name].map(esc), cv = $('#arena'), w = cv.clientWidth;
+  const X = [w * 0.27, w * 0.73], A = names[e.who], D = names[1 - e.who], other = 1 - e.who, tag = `<span>${String(B.i).padStart(2, '0')}</span>`;
+  const fl = (i, txt, col, size) => floatText('arena', X[i], TOPS[i] - 6, txt, col, size);
+  if (e.t === 'hit') {
+    FA[e.who].lunge = now; FA[other].hurt = now + 150 / S.speed;
+    fl(other, (e.crit ? 'CRIT −' : '−') + e.dmg, e.crit ? TH.pink : TH.ink, e.crit ? 24 : 19);
+    blog(tag + (e.crit ? `Critical! ${A} hits ${D} for <b>${e.dmg}</b>.` : `${A} hits ${D} for ${e.dmg}.`) + (e.burned ? ` ${D} catches fire.` : ''));
+  } else if (e.t === 'miss') {
+    FA[e.who].lunge = now; fl(other, 'miss', TH.muted, 16); blog(tag + `${A} swings and misses.`);
+  } else if (e.t === 'double') {
+    fl(e.who, '×2', INK.spark.color, 20); blog(tag + `${A} strikes again!`);
+  } else if (e.t === 'burn') {
+    FA[e.who].hurt = now; fl(e.who, `−${e.dmg} burn`, INK.ember.color, 17); blog(tag + `${A} burns for ${e.dmg}.`);
+  } else if (e.t === 'heal') {
+    fl(e.who, `+${e.amt}`, TH.good, 18); blog(tag + (e.kind === 'moss' ? `${A} regrows ${e.amt} HP.` : `${A} washes away ${e.amt} damage.`));
+  } else if (e.t === 'end') {
+    FA[1 - e.winner].ko = now;
+    blog(tag + (e.timeout ? `Time is up. ${names[e.winner]} wins on remaining health.` : `${names[1 - e.winner]} is knocked out!`));
+  }
+  B.hp = e.hp; updateHp();
+}
+$('#skipBtn').onclick = () => {
+  if (!B.running) return; clearTimeout(B.timer);
+  const ev = B.res.ev, rest = ev.length - B.i - 1;
+  if (rest > 0) blog(`<span>skip</span>Skipped ${rest} moves.`);
+  B.i = ev.length; apply(ev[ev.length - 1]); finish();
+};
+document.querySelectorAll('#speedSeg button').forEach(b => b.onclick = () => { S.speed = +b.dataset.speed; save(); renderArenaUI(); });
+function finish() {
+  if (!B.running) return;
+  B.running = false; B.done = true;
+  const win = B.res.winner === 0, i = B.opp.i, first = i === S.rank, n = esc(S.cr.name);
+  let coins, html;
+  if (B.opp.kind === 'online') {
+    coins = win ? onlineReward(B.opp) : 4;
+    if (win) { S.wins++; S.mood = Math.min(100, S.mood + 10); } else { S.losses++; S.mood = Math.max(0, S.mood - 12); }
+    const posted = NET.status === 'on' && !NET.readonly;
+    html = `<div><strong>${win ? 'Victory' : 'Defeat'}</strong>+${coins} coins · ${win ? '+10' : '−12'} mood. Odds were ${pct(B.odds)}.${posted ? ' Result posted online.' : ''}</div>`;
+    diary(`${win ? 'Beat' : 'Lost to'} ${B.opp.name} in the online arena. +${coins} coins.`);
+    if (posted) recordOnline(B.opp, win);
+  } else if (win) {
+    coins = rewardFor(i); S.wins++; S.mood = Math.min(100, S.mood + 10);
+    if (first) { S.rank++; S.sel = S.rank; }
+    html = `<div><strong>Victory</strong>+${coins} coins · +10 mood${first ? ' · next rank unlocked' : ''}. Odds were ${pct(B.odds)}.</div>`;
+    diary(`Beat ${B.opp.name} at ${B.opp.venue}. +${coins} coins.`);
+  } else {
+    coins = 4; S.losses++; S.mood = Math.max(0, S.mood - 12);
+    html = `<div><strong>Defeat</strong>+4 coins · −12 mood. Odds were ${pct(B.odds)}. Train up and try again.</div>`;
+    diary(`Lost to ${B.opp.name} at ${B.opp.venue}. ${n} is a little sad.`);
+  }
+  S.coins += coins; save();
+  const r = $('#result'); r.className = 'result ' + (win ? 'win' : 'loss');
+  r.innerHTML = html + `<div class="row"><button class="btn" data-goto="raise">Back to raising</button></div>`;
+  r.hidden = false;
+  renderHeader(); renderArenaUI();
+}
+function renderArena(now) {
+  const f = fit($('#arena')); if (!f || !SPR) return;
+  const { ctx, w, h } = f, t = now / 1000, base = h * 0.84, opp = currentOpp();
+  floor(ctx, w, base);
+  const sides = [{ spr: SPR, x: w * 0.27, flip: false, dir: 1 }];
+  if (opp) sides.push({ spr: opp.spr, x: w * 0.73, flip: true, dir: -1 });
+  sides.forEach((s, i) => {
+    const a = FA[i]; let dx = 0, dy = 0, alpha = 1, rot = 0;
+    if (a.lunge >= 0) { const p = (now - a.lunge) / (320 / S.speed); if (p >= 0 && p < 1) dx = Math.sin(p * Math.PI) * w * 0.07 * s.dir; }
+    if (a.hurt >= 0) { const p = (now - a.hurt) / 320; if (p >= 0 && p < 1) { if (!RM) dx += Math.sin(p * 40) * 7 * (1 - p); alpha = (Math.floor(p * 10) % 2) ? 0.45 : 1; } }
+    if (a.ko >= 0) { const p = Math.min(1, (now - a.ko) / 700); rot = RM ? 0 : -s.dir * p * 1.1; dy = p * 4; alpha = 1 - p * 0.45; }
+    if (RM) dx = 0;
+    TOPS[i] = drawCreature(ctx, s.spr, s.x, base, h * (0.34 + 0.38 * s.spr.rel), { t, dx, dy, alpha, rot, flip: s.flip, look: 1, ko: a.ko >= 0, phase: i * 1.7, maxW: w * 0.42 });
+  });
+  drawFloaters(ctx, FL.arena, now);
+}
+
+/* ---------- online arena (shared artifact db) ---------- */
+var NET = { status: 'connecting', kind: null, db: null, user: null, uid: null, cred: null, readonly: false, fighters: {}, results: {}, lastSync: '', gotResults: false };
+let SELO = null, syncT = 0, writeQ = Promise.resolve(), resQ = Promise.resolve();
+const onlineSpr = {};
+const CRED_KEY = 'inkborn-arena-cred';
+function netMessage() {
+  if (NET.status === 'connecting') return 'Connecting to the online arena…';
+  if (NET.status === 'off') return 'Online battles are not available here. On claude.ai, sign in to the shared link. On your own site, run the Inkborn server.';
+  const n = Object.keys(NET.fighters).length;
+  if (NET.readonly) return `${n} fighter${n === 1 ? '' : 's'} online. You can fight them, but this link does not let you post your fighter or save results. Ask the owner to invite you as an Editor.`;
+  return `${n} fighter${n === 1 ? '' : 's'} online. Fights run on your screen; the other player does not need to be here.`;
+}
+function clean(f) {
+  try {
+    if (!f || !Array.isArray(f.strokes)) return null;
+    const strokes = f.strokes.slice(0, 400).map(s => ({
+      c: INK[s && s.c] ? s.c : 'ink', w: clamp(+(s && s.w) || 4, 1, 30),
+      p: (Array.isArray(s && s.p) ? s.p : []).slice(0, 2000).filter(Array.isArray).map(q => [clamp(+q[0] || 0, 0, PAD), clamp(+q[1] || 0, 0, PAD)]),
+    })).filter(s => s.p.length);
+    if (!strokes.length) return null;
+    const st = {}; for (const [k] of STATS) st[k] = Math.round(clamp(+(f.stats && f.stats[k]) || 1, 1, 9999));
+    return { name: String(f.name || 'Unnamed').slice(0, 16), strokes, stats: st, el: INK[f.el] ? f.el : 'ink', born: +f.born || 0, at: +f.at || 0, grade: ['C', 'B', 'A', 'S'].includes(f.grade) ? f.grade : '?' };
+  } catch (e) { return null; }
+}
+function onlineOpp(uid) {
+  const v = clean(NET.fighters[uid]); if (!v || uid === NET.uid) return null;
+  const ck = v.at + ':' + v.strokes.length;
+  if (!onlineSpr[uid] || onlineSpr[uid].ck !== ck) onlineSpr[uid] = { ck, spr: makeSticker(v.strokes) };
+  return { kind: 'online', key: 'O' + uid, uid, born: v.born, name: v.name, stats: v.stats, el: v.el, spr: onlineSpr[uid].spr, venue: 'the online arena' };
+}
+function records() {
+  const R = {}, add = (k, w) => { const r = R[k] || (R[k] = { w: 0, l: 0 }); w ? r.w++ : r.l++; };
+  for (const [uid, doc] of Object.entries(NET.results)) {
+    for (const x of (Array.isArray(doc && doc.fights) ? doc.fights : [])) {
+      if (!x || typeof x.d !== 'string' || x.d === uid) continue;
+      add(uid + ':' + x.ab, !!x.w); add(x.d + ':' + x.db, !x.w);
+    }
+  }
+  return R;
+}
+function defenses() {
+  if (!NET.uid || !S.cr) return [];
+  const out = [];
+  for (const [uid, doc] of Object.entries(NET.results)) {
+    if (uid === NET.uid) continue;
+    for (const x of (Array.isArray(doc && doc.fights) ? doc.fights : [])) if (x && x.d === NET.uid && x.db === S.cr.born) out.push({ at: +x.at || 0, an: String(x.an || 'Someone').slice(0, 16), won: !x.w });
+  }
+  return out.sort((a, b) => b.at - a.at).slice(0, 20);
+}
+function ago(t) { const m = Math.max(0, Math.round((Date.now() - t) / 60000)); return m < 1 ? 'now' : m < 60 ? m + 'm' : m < 1440 ? Math.round(m / 60) + 'h' : Math.round(m / 1440) + 'd'; }
+function compactStrokes(st) {
+  let out = st.map(s => ({ c: s.c, w: s.w, p: s.p.map(q => [Math.round(q[0]), Math.round(q[1])]) }));
+  while (JSON.stringify(out).length > 180000) out = out.map(s => ({ ...s, p: s.p.filter((q, i) => i % 2 === 0 || i === s.p.length - 1) }));
+  return out;
+}
+/* Self-hosted server backend (server.js). Same data shapes as the artifact db. */
+async function api(method, p, body) {
+  const r = await fetch('api/' + p, { method, cache: 'no-store', headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(j.error || 'Server error'); e.code = j.code || 'server'; e.msg = j.error; throw e; }
+  return j;
+}
+async function ensureCred() {
+  if (NET.cred) return NET.cred;
+  const j = await api('POST', 'register', {});
+  NET.cred = { id: j.id, secret: j.secret }; NET.uid = j.id;
+  try { localStorage.setItem(CRED_KEY, JSON.stringify(NET.cred)); } catch (e) {}
+  return NET.cred;
+}
+let refreshT = 0;
+function serverRefreshSoon() { clearTimeout(refreshT); refreshT = setTimeout(serverRefresh, 250); }
+async function serverRefresh() {
+  try {
+    const j = await api('GET', 'state');
+    const f = {}; for (const x of (j.fighters || [])) if (x && typeof x.id === 'string') f[x.id] = x;
+    const res = {}; for (const x of (j.results || [])) if (x && typeof x.a === 'string') (res[x.a] || (res[x.a] = { fights: [] })).fights.push(x);
+    NET.fighters = f; NET.results = res; NET.status = 'on';
+    if (!NET.gotResults) { NET.gotResults = true; if (S.cr) announceDefenses(); }
+  } catch (e) { NET.status = 'off'; }
+  refreshNet();
+}
+async function initServer() {
+  try { const h = await api('GET', 'hello'); if (!h || h.game !== 'inkborn') throw 0; }
+  catch (e) { NET.status = 'off'; return refreshNet(); }
+  NET.kind = 'server'; NET.readonly = false;
+  try { const c = JSON.parse(localStorage.getItem(CRED_KEY) || 'null'); if (c && c.id && c.secret) { NET.cred = c; NET.uid = c.id; } } catch (e) {}
+  await serverRefresh(); scheduleSync();
+  try { const es = new EventSource('api/events'); es.onmessage = serverRefreshSoon; } catch (e) {}
+  setInterval(serverRefresh, 30000);
+}
+function handleWriteErr(e) {
+  const c = e && e.code;
+  if (NET.kind === 'server') {
+    if (c === 'auth') { NET.cred = null; NET.uid = null; try { localStorage.removeItem(CRED_KEY); } catch (x) {} }
+    toast(e && e.msg ? e.msg : 'Could not reach the server. Try again in a moment.');
+    return refreshNet();
+  }
+  if (c === 'invalid_argument' || c === 'not_granted') { NET.readonly = true; S.listed = false; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (x) {} toast('This link lets you fight but not post. Ask the owner to invite you as an Editor.'); }
+  else if (c === 'quota_exceeded') toast('The online arena is full right now.');
+  else toast('Could not reach the online arena. Try again in a moment.');
+  refreshNet();
+}
+function scheduleSync() {
+  if (!NET || NET.status !== 'on' || NET.readonly || !S.listed || !S.cr) return;
+  clearTimeout(syncT);
+  syncT = setTimeout(() => { writeQ = writeQ.catch(() => {}).then(pushFighter); }, 1500);
+}
+async function pushFighter() {
+  if (!S.cr || !S.listed || NET.readonly || NET.status !== 'on') return;
+  if (NET.kind !== 'server' && !NET.uid) return;
+  const card = { name: S.cr.name, strokes: compactStrokes(S.cr.strokes), stats: S.cr.stats, el: S.cr.el, grade: grade(S.cr.pot), born: S.cr.born };
+  const j = JSON.stringify([card, NET.kind === 'server' ? (S.trainer || '') : '']); if (j === NET.lastSync) return;
+  try {
+    if (NET.kind === 'server') {
+      const c = await ensureCred();
+      await api('PUT', 'fighter', { id: c.id, secret: c.secret, trainer: S.trainer || '', fighter: card });
+      serverRefreshSoon();
+    } else await NET.db.doc('fighters/' + NET.uid).set({ ...card, at: Date.now() });
+    NET.lastSync = j;
+  } catch (e) { handleWriteErr(e); }
+}
+async function removeFighter() {
+  if (NET.status !== 'on' || NET.readonly) return;
+  try {
+    if (NET.kind === 'server') { if (!NET.cred) return; const c = NET.cred; await (writeQ = writeQ.catch(() => {}).then(() => api('DELETE', 'fighter', { id: c.id, secret: c.secret }))); serverRefreshSoon(); }
+    else { if (!NET.uid) return; await (writeQ = writeQ.catch(() => {}).then(() => NET.db.doc('fighters/' + NET.uid).delete())); }
+    NET.lastSync = '';
+  } catch (e) { handleWriteErr(e); }
+}
+function recordOnline(opp, win) {
+  if (NET.kind === 'server') return serverRefreshSoon(); // the server already recorded it
+  if (!NET.uid || NET.readonly || !S.cr) return;
+  const entry = { d: opp.uid, db: opp.born, ab: S.cr.born || 0, w: win ? 1 : 0, at: Date.now(), an: S.cr.name, dn: opp.name };
+  resQ = resQ.catch(() => {}).then(async () => {
+    const mine = NET.results[NET.uid];
+    const fights = (mine && Array.isArray(mine.fights) ? mine.fights.slice(-149) : []).concat([entry]);
+    try { await NET.db.doc('results/' + NET.uid).set({ fights }); } catch (e) { handleWriteErr(e); }
+  });
+}
+function refreshNet() { if (view !== 'arena' || !S.cr) return; if (B.running) renderAside(); else renderArenaUI(); }
+function announceDefenses() {
+  const dl = defenses().filter(d => d.at > (S.seenDef || 0));
+  if (dl.length) { const w = dl.filter(d => d.won).length; toast(`${dl.length} challenge${dl.length > 1 ? 's' : ''} against ${S.cr.name} while you were away: ${w} won, ${dl.length - w} lost.`); }
+}
+async function initNet() {
+  const cl = window.claude;
+  if (!cl || typeof cl.use !== 'function') return initServer();
+  NET.kind = 'artifact';
+  let db = null, user = null;
+  try { [db, user] = await Promise.all([cl.use('db'), cl.use('user')]); } catch (e) {}
+  if (!db) { NET.status = 'off'; return refreshNet(); }
+  NET.db = db; NET.user = user;
+  NET.uid = user ? await user.id() : null;
+  const cw = user ? await user.can('data.write') : null;
+  NET.readonly = !NET.uid || cw === false;
+  NET.status = 'on';
+  const onErr = e => { if (e && (e.code === 'revoked' || e.code === 'unavailable')) NET.status = 'off'; refreshNet(); };
+  db.collection('fighters').onSnapshot(s => {
+    const m = {}; s.docs.forEach(d => { if (d.exists) m[d.id] = d.data(); }); NET.fighters = m; refreshNet();
+  }, onErr);
+  db.collection('results').onSnapshot(s => {
+    const m = {}; s.docs.forEach(d => { if (d.exists) m[d.id] = d.data(); }); NET.results = m;
+    if (!NET.gotResults && !s.metadata.fromCache) { NET.gotResults = true; if (S.cr) announceDefenses(); }
+    refreshNet();
+  }, onErr);
+  refreshNet(); scheduleSync();
+}
+async function renderOnline() {
+  $('#netStatus').textContent = netMessage();
+  const lb = $('#listBtn'), canList = NET.status === 'on' && !NET.readonly && !!S.cr;
+  lb.hidden = !canList;
+  if (canList) lb.textContent = S.listed ? `Take ${S.cr.name} out of the online arena` : `Enter ${S.cr.name} in the online arena`;
+  lb.disabled = B.running;
+  $('#trainerRow').hidden = !(NET.kind === 'server' && NET.status === 'on');
+  if (document.activeElement !== $('#trainerName')) $('#trainerName').value = S.trainer || '';
+  const R = records(), rows = [];
+  for (const [uid, f] of Object.entries(NET.fighters)) { const v = clean(f); if (!v) continue; rows.push({ uid, v, rec: R[uid + ':' + v.born] || { w: 0, l: 0 }, pw: power(v.stats) }); }
+  rows.sort((a, b) => (b.rec.w - b.rec.l) - (a.rec.w - a.rec.l) || b.pw - a.pw);
+  if (!B.running && (!SELO || !rows.some(r => r.uid === SELO && r.uid !== NET.uid))) { const first = rows.find(r => r.uid !== NET.uid); SELO = first ? first.uid : null; }
+  $('#onlineList').innerHTML = rows.length ? rows.map((r, i) => {
+    const mine = r.uid === NET.uid;
+    return `<li><button class="lad" data-uid="${esc(r.uid)}" aria-current="${r.uid === SELO}" ${mine || B.running ? 'disabled' : ''}><span class="n">${String(i + 1).padStart(2, '0')}</span><span>${esc(r.v.name)}<small><span class="trainer" data-tid="${esc(r.uid)}">${mine ? 'yours · ' : ''}</span>power ${Math.round(r.pw)} · ${r.rec.w}–${r.rec.l}</small></span><span class="st">${mine ? 'YOU' : INK[r.v.el].name.toUpperCase()}</span></button></li>`;
+  }).join('') : `<li class="sub">${NET.status === 'on' ? 'No one has entered yet. Enter your fighter, then share the link so friends can join.' : ''}</li>`;
+  const dl = defenses();
+  $('#defLog').innerHTML = dl.length ? dl.map(d => `<li><span>${ago(d.at)}</span>${esc(d.an)} challenged ${esc(S.cr.name)}: ${d.won ? 'you won' : 'you lost'}.</li>`).join('') : '<li class="sub">No challenges yet.</li>';
+  if (view === 'arena' && dl[0] && dl[0].at > (S.seenDef || 0)) { S.seenDef = dl[0].at; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  if (NET.kind === 'server') {
+    document.querySelectorAll('#onlineList .trainer').forEach(sp => {
+      if (sp.dataset.tid === NET.uid) return;
+      const t = NET.fighters[sp.dataset.tid] && NET.fighters[sp.dataset.tid].trainer;
+      sp.textContent = t ? `by ${String(t).slice(0, 24)} · ` : '';
+    });
+  } else if (NET.user && rows.length) {
+    let ps = {}; try { ps = await NET.user.profiles(rows.map(r => r.uid)); } catch (e) {}
+    document.querySelectorAll('#onlineList .trainer').forEach(sp => {
+      if (sp.dataset.tid === NET.uid) return;
+      const p = ps[sp.dataset.tid]; sp.textContent = p && p.name ? `by ${p.name} · ` : '';
+    });
+  }
+}
+$('#onlineList').onclick = e => {
+  const b = e.target.closest('[data-uid]'); if (!b || b.disabled) return;
+  SELO = b.dataset.uid; B = { running: false, done: false }; resetFA(); $('#result').hidden = true; renderArenaUI();
+};
+$('#trainerName').addEventListener('change', e => { S.trainer = e.target.value.trim().slice(0, 24); save(); });
+$('#listBtn').onclick = async () => {
+  if (!S.cr || NET.status !== 'on' || NET.readonly) return;
+  if (S.listed) { S.listed = false; save(); await removeFighter(); toast(`${S.cr.name} left the online arena.`); }
+  else {
+    S.listed = true; save(); clearTimeout(syncT);
+    await (writeQ = writeQ.catch(() => {}).then(pushFighter));
+    if (S.listed) toast(`${S.cr.name} is in the online arena. Share the link so friends can challenge it.`);
+  }
+  refreshNet();
+};
+
+/* ---------- shell ---------- */
+let view = 'draw';
+const VIEWS = ['draw', 'raise', 'arena'];
+function show(v) {
+  view = v;
+  for (const k of VIEWS) { $('#view-' + k).hidden = k !== v; $('#tab-' + k).setAttribute('aria-selected', k === v); }
+  if (v === 'raise') renderRaise();
+  if (v === 'arena') { if (B.done) { /* keep last result visible */ } renderArenaUI(); }
+  if (v === 'draw') { updateProjected(); requestAnimationFrame(sizePad); }
+}
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => show(b.dataset.view));
+document.addEventListener('click', e => { const g = e.target.closest('[data-goto]'); if (g) { if (g.dataset.goto !== 'arena') { B = B.running ? B : { running: false, done: false }; $('#result').hidden = true; } show(g.dataset.goto); } });
+$('#crName').addEventListener('change', e => { const v = e.target.value.trim().slice(0, 16); if (v) { S.cr.name = v; save(); renderArenaUI(); } else e.target.value = S.cr.name; });
+$('#newBtn').onclick = () => { $('#confirmText').textContent = `Release ${S.cr.name}? Its stats, your coins and your ladder rank all reset.`; $('#confirmNew').hidden = false; $('#newBtn').hidden = true; };
+$('#confirmNo').onclick = () => { $('#confirmNew').hidden = true; $('#newBtn').hidden = false; };
+$('#confirmYes').onclick = () => {
+  if (S.listed) removeFighter();
+  const keep = { speed: S.speed, listed: S.listed, mode: S.mode }; S = Object.assign(newState(), keep); SPR = null; oddsCache = {}; B = { running: false, done: false };
+  save(); $('#confirmNew').hidden = true; $('#newBtn').hidden = false;
+  strokes = []; isExample = false; renderHeader(); show('draw');
+};
+function renderHeader() { $('#dayN').textContent = S.day; $('#coinN').textContent = S.coins; $('#recN').textContent = `${S.wins}–${S.losses}`; }
+let toastT = 0;
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+
+function frame(now) {
+  if (view === 'raise' && S.cr) renderStage(now);
+  if (view === 'arena' && S.cr) renderArena(now);
+  if (view === 'draw' && !$('#birth').hidden) renderBirth(now);
+  requestAnimationFrame(frame);
+}
+
+function start(data) {
+  readTheme();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readTheme(); redrawPad(); });
+  new MutationObserver(() => { readTheme(); redrawPad(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  buildSwatches(); buildCare();
+  const saved = (data && data.S) || load();
+  if (saved && typeof saved === 'object') S = Object.assign(newState(), saved);
+  if (S.cr) { try { SPR = makeSticker(S.cr.strokes); if (!S.cr.born) S.cr.born = Date.now(); } catch (e) { S = newState(); } }
+  if (!S.cr) { strokes = exampleStrokes(); isExample = true; }
+  renderHeader();
+  show(S.cr ? ((data && data.view) || 'raise') : 'draw');
+  requestAnimationFrame(frame);
+  initNet();
+}
+try { window.claude?.hot?.snapshot?.(() => ({ S, view })); } catch (e) {}
+if (window.claude?.hot?.ready) window.claude.hot.ready(start); else start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body>
+</html>
